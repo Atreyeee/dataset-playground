@@ -42,8 +42,8 @@ You can contribute to this project in the following ways:
 - Enhance data handling  
 - Add new visualizations  
 - Optimize existing code  
+  
 
----
 
 ### 💡 Contribution Tips
 - Keep changes small and focused    
