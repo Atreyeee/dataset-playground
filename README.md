@@ -19,34 +19,69 @@ To create a collaborative space where contributors can explore datasets and buil
 - Clean and modular code structure  
 
 ---
+## 🧰 Tech Stack
 
-## 🛠 Make Your Changes
+### 👨‍💻 Language
+- Python
+
+### 📊 Data Handling
+- Pandas
+
+### 📈 Visualization
+- Matplotlib
+- Seaborn
+
+### 🤖 Basic Machine Learning
+- Scikit-learn
+
+### 🖥️ Interface
+- Streamlit
+
+### 🗄️ Data Storage
+- CSV files
+
+---
+
+## 🛠 How to Contribute
 
 You can contribute to this project in the following ways:
 
 ### 📁 Add a Dataset
-- Create a new folder inside `datasets/`
-- Add your dataset file (`.csv`)
-- Include a short description
+- Go to the `datasets/` folder
+- Create a new subfolder for your dataset
+- Add your dataset file (.csv)
+- Include a short `README.md` describing the dataset
 
 ---
 
 ### ⚙️ Add a Feature
 - Work inside the `core/` folder
-- Keep your code simple and modular
-- Focus on small, independent functions
+- Keep your code modular (small functions)
+- Each feature should do one clear task
+
+Examples:
+- Dataset summary (mean, median, missing values)
+- New visualizations (bar chart, histogram)
+- Basic ML models
 
 ---
 
-### 🛠 Improve Existing Features
-- Enhance data handling  
-- Add new visualizations  
-- Optimize existing code  
-  
-
-
-### 💡 Contribution Tips
-- Keep changes small and focused    
-- Follow the existing project structure  
+### 🖥️ Update the App (Streamlit)
+- Modify the main app file (e.g., `app.py`)
+- Connect your feature from `core/` to the UI
+- Keep the interface simple and user-friendly
 
 ---
+
+### 🛠 Improve Existing Code
+- Refactor messy code
+- Fix bugs
+- Improve performance
+
+---
+
+## 💡 Contribution Tips
+- Keep pull requests small and focused
+- Follow the existing folder structure
+- Write clean, readable code
+- Add comments where necessary
