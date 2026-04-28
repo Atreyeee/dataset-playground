@@ -1,87 +1,138 @@
-# dataset-playground
+# DATASET_PLAYGROUND — Dataset Playground
 
-A beginner-friendly open-source project for building simple and modular dataset analysis tools.
-
----
-
-## 🎯 Goal
-
-To create a collaborative space where contributors can explore datasets and build basic tools for data analysis.
+Upload any CSV file and explore it visually: charts, statistics, and basic ML models — no coding needed.
 
 ---
 
-## 🚀 Features (Planned)
+## 🚀 How to Run (VS Code / Terminal)
 
-- Dataset upload and preview  
-- Basic dataset information (columns, shape, missing values)  
-- Simple data visualizations (bar charts, histograms, etc.)  
-- Basic machine learning models  
-- Clean and modular code structure  
+### Step 1: Open Project Folder
 
----
-## 🧰 Tech Stack
+Open VS Code and make sure you are inside the folder that contains:
 
-### 👨‍💻 Language
-- Python
-
-### 📊 Data Handling
-- Pandas
-
-### 📈 Visualization
-- Matplotlib
-- Seaborn
-
-### 🤖 Basic Machine Learning
-- Scikit-learn
-
-### 🖥️ Interface
-- Streamlit
-
-### 🗄️ Data Storage
-- CSV files
+* app.py
+* requirements.txt
+* utils/
 
 ---
 
-## 🛠 How to Contribute
+### Step 2: Create Virtual Environment
 
-You can contribute to this project in the following ways:
-
-### 📁 Add a Dataset
-- Go to the `datasets/` folder
-- Create a new subfolder for your dataset
-- Add your dataset file (.csv)
-- Include a short `README.md` describing the dataset
+```bash
+python -m venv venv
+```
 
 ---
 
-### ⚙️ Add a Feature
-- Work inside the `core/` folder
-- Keep your code modular (small functions)
-- Each feature should do one clear task
+### Step 3: Activate Environment
 
-Examples:
-- Dataset summary (mean, median, missing values)
-- New visualizations (bar chart, histogram)
-- Basic ML models
+#### Windows:
 
----
+```bash
+venv\Scripts\activate
+```
 
-### 🖥️ Update the App (Streamlit)
-- Modify the main app file (e.g., `app.py`)
-- Connect your feature from `core/` to the UI
-- Keep the interface simple and user-friendly
+#### Mac / Linux:
+
+```bash
+source venv/bin/activate
+```
 
 ---
 
-### 🛠 Improve Existing Code
-- Refactor messy code
-- Fix bugs
-- Improve performance
+### Step 4: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## 💡 Contribution Tips
-- Keep pull requests small and focused
-- Follow the existing folder structure
-- Write clean, readable code
-- Add comments where necessary
+### Step 5: Run the App
+
+```bash
+streamlit run app.py
+```
+
+---
+
+## 🌐 Output
+
+* A local URL will appear in the terminal (like [http://localhost:8501](http://localhost:8501))
+* The app will open automatically in your browser
+
+---
+
+## 📁 Project Structure
+
+```
+DATASET_PLAYGROUND/
+│
+├── app.py                ← Main Streamlit app
+├── requirements.txt      ← Dependencies
+├── README.md             ← Documentation
+│
+├── dataset/              ← Add your CSV files here (optional)
+│
+└── utils/
+    ├── __init__.py
+    ├── load_data.py
+    ├── summary.py
+    ├── visualization.py
+    └── ml_model.py
+```
+
+---
+
+## ✨ Features
+
+* 📊 Overview
+
+  * Upload CSV file
+  * View dataset shape, columns, missing values
+
+* 📋 Data Table
+
+  * Browse and inspect full dataset
+
+* 📈 Visualization
+
+  * Histogram, scatter plot, correlation heatmap, box plot
+
+* 🤖 ML Model
+
+  * Train simple ML models
+  * View accuracy / performance metrics
+
+---
+
+## ⚠️ Important Notes
+
+* Make sure you run commands inside the correct folder
+* Folder name must be exactly:
+  utils/
+* File names must match exactly:
+  load_data.py
+  ml_model.py
+* Python is case-sensitive
+
+---
+
+## 🧠 Troubleshooting
+
+* ModuleNotFoundError
+  → Check folder name (utils) and file names
+
+* requirements.txt not found
+  → You are in the wrong directory → use cd DATASET_PLAYGROUND
+
+* App not opening
+  → Copy the URL from terminal and paste in browser
+
+---
+
+## 🚀 Future Improvements
+
+* Add sample datasets
+* Improve UI design
+* Deploy online (Streamlit Cloud / Render)
