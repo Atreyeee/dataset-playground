@@ -1,37 +1,138 @@
-# ◈ DataLens — Dataset Exploration Platform
+# DATASET_PLAYGROUND — Dataset Playground
 
-A professional, dark-themed dataset playground built with Python & Streamlit.
+Upload any CSV file and explore it visually: charts, statistics, and basic ML models — no coding needed.
 
-## Features
+---
 
-| Page | What it does |
-|------|-------------|
-| **Overview** | Upload CSV, see shape / types / missing values / descriptive stats |
-| **Data Table** | Filter rows by any column, search values, download filtered CSV |
-| **Visualize** | Distribution · Correlation heatmap · Scatter (with trend line) · Box/Violin |
-| **ML Model** | Auto-selects Random Forest or Linear/Logistic Regression · Feature importance · Confusion matrix / Residuals |
+## 🚀 How to Run (VS Code / Terminal)
 
-## Setup
+### Step 1: Open Project Folder
+
+Open VS Code and make sure you are inside the folder that contains:
+
+* app.py
+* requirements.txt
+* utils/
+
+---
+
+### Step 2: Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+---
+
+### Step 3: Activate Environment
+
+#### Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+#### Mac / Linux:
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+### Step 4: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
+```
+
+---
+
+### Step 5: Run the App
+
+```bash
 streamlit run app.py
 ```
 
-## Tech stack
+---
 
-- **Python 3.10+**
-- Streamlit · Pandas · NumPy · Matplotlib · Seaborn · Scikit-learn · SciPy
+## 🌐 Output
 
-## What's new vs v1
+* A local URL will appear in the terminal (like [http://localhost:8501](http://localhost:8501))
+* The app will open automatically in your browser
 
-- Dark professional theme with DM Sans / DM Mono fonts
-- `load_csv` now surfaces real error messages (encoding fallback included)
-- ML backend auto-upgrades to Random Forest when data is sufficient
-- Feature importance bars rendered inline
-- Confusion matrix & residuals plot included
-- Scatter plots include an auto-fitted trend line
-- KDE overlay on histograms via SciPy
-- Correlation heatmap with method selector (Pearson / Spearman / Kendall)
-- Fixed `__init__.py` naming bug from v1
-- `plt.close()` called after every figure to prevent memory leaks
+---
+
+## 📁 Project Structure
+
+```
+DATASET_PLAYGROUND/
+│
+├── app.py                ← Main Streamlit app
+├── requirements.txt      ← Dependencies
+├── README.md             ← Documentation
+│
+├── dataset/              ← Add your CSV files here (optional)
+│
+└── utils/
+    ├── __init__.py
+    ├── load_data.py
+    ├── summary.py
+    ├── visualization.py
+    └── ml_model.py
+```
+
+---
+
+## ✨ Features
+
+* 📊 Overview
+
+  * Upload CSV file
+  * View dataset shape, columns, missing values
+
+* 📋 Data Table
+
+  * Browse and inspect full dataset
+
+* 📈 Visualization
+
+  * Histogram, scatter plot, correlation heatmap, box plot
+
+* 🤖 ML Model
+
+  * Train simple ML models
+  * View accuracy / performance metrics
+
+---
+
+## ⚠️ Important Notes
+
+* Make sure you run commands inside the correct folder
+* Folder name must be exactly:
+  utils/
+* File names must match exactly:
+  load_data.py
+  ml_model.py
+* Python is case-sensitive
+
+---
+
+## 🧠 Troubleshooting
+
+* ModuleNotFoundError
+  → Check folder name (utils) and file names
+
+* requirements.txt not found
+  → You are in the wrong directory → use cd DATASET_PLAYGROUND
+
+* App not opening
+  → Copy the URL from terminal and paste in browser
+
+---
+
+## 🚀 Future Improvements
+
+* Add sample datasets
+* Improve UI design
+* Deploy online (Streamlit Cloud / Render)
