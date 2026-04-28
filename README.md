@@ -1,87 +1,37 @@
-# dataset-playground
+# ◈ DataLens — Dataset Exploration Platform
 
-A beginner-friendly open-source project for building simple and modular dataset analysis tools.
+A professional, dark-themed dataset playground built with Python & Streamlit.
 
----
+## Features
 
-## 🎯 Goal
+| Page | What it does |
+|------|-------------|
+| **Overview** | Upload CSV, see shape / types / missing values / descriptive stats |
+| **Data Table** | Filter rows by any column, search values, download filtered CSV |
+| **Visualize** | Distribution · Correlation heatmap · Scatter (with trend line) · Box/Violin |
+| **ML Model** | Auto-selects Random Forest or Linear/Logistic Regression · Feature importance · Confusion matrix / Residuals |
 
-To create a collaborative space where contributors can explore datasets and build basic tools for data analysis.
+## Setup
 
----
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-## 🚀 Features (Planned)
+## Tech stack
 
-- Dataset upload and preview  
-- Basic dataset information (columns, shape, missing values)  
-- Simple data visualizations (bar charts, histograms, etc.)  
-- Basic machine learning models  
-- Clean and modular code structure  
+- **Python 3.10+**
+- Streamlit · Pandas · NumPy · Matplotlib · Seaborn · Scikit-learn · SciPy
 
----
-## 🧰 Tech Stack
+## What's new vs v1
 
-### 👨‍💻 Language
-- Python
-
-### 📊 Data Handling
-- Pandas
-
-### 📈 Visualization
-- Matplotlib
-- Seaborn
-
-### 🤖 Basic Machine Learning
-- Scikit-learn
-
-### 🖥️ Interface
-- Streamlit
-
-### 🗄️ Data Storage
-- CSV files
-
----
-
-## 🛠 How to Contribute
-
-You can contribute to this project in the following ways:
-
-### 📁 Add a Dataset
-- Go to the `datasets/` folder
-- Create a new subfolder for your dataset
-- Add your dataset file (.csv)
-- Include a short `README.md` describing the dataset
-
----
-
-### ⚙️ Add a Feature
-- Work inside the `core/` folder
-- Keep your code modular (small functions)
-- Each feature should do one clear task
-
-Examples:
-- Dataset summary (mean, median, missing values)
-- New visualizations (bar chart, histogram)
-- Basic ML models
-
----
-
-### 🖥️ Update the App (Streamlit)
-- Modify the main app file (e.g., `app.py`)
-- Connect your feature from `core/` to the UI
-- Keep the interface simple and user-friendly
-
----
-
-### 🛠 Improve Existing Code
-- Refactor messy code
-- Fix bugs
-- Improve performance
-
----
-
-## 💡 Contribution Tips
-- Keep pull requests small and focused
-- Follow the existing folder structure
-- Write clean, readable code
-- Add comments where necessary
+- Dark professional theme with DM Sans / DM Mono fonts
+- `load_csv` now surfaces real error messages (encoding fallback included)
+- ML backend auto-upgrades to Random Forest when data is sufficient
+- Feature importance bars rendered inline
+- Confusion matrix & residuals plot included
+- Scatter plots include an auto-fitted trend line
+- KDE overlay on histograms via SciPy
+- Correlation heatmap with method selector (Pearson / Spearman / Kendall)
+- Fixed `__init__.py` naming bug from v1
+- `plt.close()` called after every figure to prevent memory leaks
