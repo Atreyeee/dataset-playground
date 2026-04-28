@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from utils.load_data import load_csv
-from utils.summary import get_summary
-from utils.visualization import plot_distribution, plot_correlation, plot_scatter, plot_boxplot
-from utils.ml_model import run_ml_model
+from load_data import load_csv
+from summary import get_summary
+from visualization import plot_distribution, plot_correlation, plot_scatter, plot_boxplot
+from ml_model import run_ml_model
 
 # ─────────────────────────────────────────
 #  Page config
