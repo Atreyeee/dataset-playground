@@ -18,158 +18,604 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────
-#  Global CSS — dark professional theme
+#  Global CSS — Bento Grid / Aurora theme
 # ─────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
-/* ── Root & base ── */
+/* ── CSS Variables ── */
+:root {
+    --bg:          #050810;
+    --surface:     #0b0f1a;
+    --surface2:    #0f1520;
+    --border:      rgba(99,179,237,0.10);
+    --border2:     rgba(99,179,237,0.18);
+    --accent:      #63b3ed;
+    --accent2:     #f6ad55;
+    --accent3:     #68d391;
+    --text-primary:#e8f0fe;
+    --text-muted:  #4a5568;
+    --text-dim:    #2d3748;
+    --glow:        rgba(99,179,237,0.15);
+    --glow2:       rgba(246,173,85,0.12);
+}
+
+/* ── Base ── */
+@font-face { }
 html, body, [class*="css"] {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Syne', sans-serif;
 }
 .stApp {
-    background: #0d0f14;
-    color: #e2e8f0;
+    background: var(--bg);
+    color: var(--text-primary);
+}
+
+/* ── Aurora background mesh ── */
+.stApp::before {
+    content: '';
+    position: fixed;
+    top: -40%;
+    left: -20%;
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(ellipse, rgba(99,179,237,0.06) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+    animation: aurora1 12s ease-in-out infinite alternate;
+}
+.stApp::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    right: -15%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(246,173,85,0.05) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+    animation: aurora2 15s ease-in-out infinite alternate;
+}
+@keyframes aurora1 {
+    0%   { transform: translate(0,0) scale(1); }
+    100% { transform: translate(5%,8%) scale(1.1); }
+}
+@keyframes aurora2 {
+    0%   { transform: translate(0,0) scale(1); }
+    100% { transform: translate(-6%,-5%) scale(1.08); }
 }
 
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
-    background: #111318 !important;
-    border-right: 1px solid #1e2130 !important;
+    background: var(--surface) !important;
+    border-right: 1px solid var(--border2) !important;
+    backdrop-filter: blur(12px);
 }
-[data-testid="stSidebar"] .block-container { padding: 2rem 1.2rem; }
+[data-testid="stSidebar"] .block-container {
+    padding: 2.2rem 1.4rem;
+}
 
 /* ── Hide default header ── */
 header[data-testid="stHeader"] { display: none; }
-.block-container { padding: 2rem 2.5rem 4rem !important; max-width: 1280px; }
+.block-container {
+    padding: 2.2rem 3rem 5rem !important;
+    max-width: 1320px;
+}
 
 /* ── Metric cards ── */
 [data-testid="stMetric"] {
-    background: #161922;
-    border: 1px solid #1e2130;
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s;
 }
-[data-testid="stMetricLabel"] { font-size: 11px !important; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280 !important; }
-[data-testid="stMetricValue"] { font-size: 28px !important; font-weight: 600 !important; color: #f1f5f9 !important; }
+[data-testid="stMetric"]:hover {
+    border-color: rgba(99,179,237,0.35);
+    box-shadow: 0 0 28px var(--glow);
+}
+[data-testid="stMetric"]::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+}
+[data-testid="stMetricLabel"] {
+    font-size: 10px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted) !important;
+    font-weight: 600 !important;
+}
+[data-testid="stMetricValue"] {
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: -0.02em;
+}
 [data-testid="stMetricDelta"] { font-size: 12px !important; }
 
 /* ── Dataframe ── */
-[data-testid="stDataFrame"] { border: 1px solid #1e2130; border-radius: 8px; overflow: hidden; }
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--border2) !important;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface2);
+}
 
 /* ── Buttons ── */
 .stButton > button {
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    padding: 0.5rem 1.5rem;
-    transition: background 0.2s;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 1.6rem;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
-.stButton > button:hover { background: #1d4ed8; border: none; }
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(99,179,237,0.08), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.stButton > button:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--glow), inset 0 0 20px rgba(99,179,237,0.04);
+    color: #fff;
+}
+.stButton > button:hover::before { opacity: 1; }
 
 /* ── Selectbox / inputs ── */
 [data-baseweb="select"] > div {
-    background: #161922 !important;
-    border: 1px solid #1e2130 !important;
-    border-radius: 8px !important;
-    color: #e2e8f0 !important;
+    background: var(--surface2) !important;
+    border: 1px solid var(--border2) !important;
+    border-radius: 10px !important;
+    color: var(--text-primary) !important;
+    font-family: 'Syne', sans-serif !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-.stSelectbox label, .stMultiSelect label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; }
+[data-baseweb="select"] > div:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(99,179,237,0.12) !important;
+}
+.stSelectbox label, .stMultiSelect label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted) !important;
+    font-weight: 600;
+}
+.stTextInput > div > div {
+    background: var(--surface2) !important;
+    border: 1px solid var(--border2) !important;
+    border-radius: 10px !important;
+    color: var(--text-primary) !important;
+}
+.stTextInput > div > div:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(99,179,237,0.12) !important;
+}
+.stTextInput label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted) !important;
+    font-weight: 600;
+}
+
+/* ── Sliders ── */
+[data-testid="stSlider"] [data-baseweb="slider"] {
+    padding: 0 4px;
+}
+[data-testid="stSlider"] label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted) !important;
+    font-weight: 600;
+}
+
+/* ── Checkbox ── */
+.stCheckbox label span {
+    font-size: 13px !important;
+    color: var(--text-primary) !important;
+}
 
 /* ── File uploader ── */
 [data-testid="stFileUploader"] {
-    background: #161922;
-    border: 1.5px dashed #2a3042;
-    border-radius: 12px;
-    padding: 1rem;
+    background: var(--surface2);
+    border: 1.5px dashed rgba(99,179,237,0.22);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+[data-testid="stFileUploader"]:hover {
+    border-color: rgba(99,179,237,0.45);
+    box-shadow: 0 0 30px var(--glow);
 }
 
 /* ── Expander ── */
 [data-testid="stExpander"] {
-    background: #161922;
-    border: 1px solid #1e2130 !important;
-    border-radius: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border2) !important;
+    border-radius: 12px;
 }
 
 /* ── Tabs ── */
-[data-baseweb="tab-list"] { background: transparent; border-bottom: 1px solid #1e2130; gap: 0; }
+[data-baseweb="tab-list"] {
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    gap: 0;
+}
 [data-baseweb="tab"] {
     background: transparent !important;
-    color: #6b7280 !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    padding: 0.6rem 1.2rem !important;
+    color: var(--text-muted) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 0.7rem 1.4rem !important;
     border-bottom: 2px solid transparent !important;
+    font-family: 'Syne', sans-serif !important;
+    transition: color 0.2s !important;
 }
 [aria-selected="true"][data-baseweb="tab"] {
-    color: #60a5fa !important;
-    border-bottom: 2px solid #2563eb !important;
+    color: var(--accent) !important;
+    border-bottom: 2px solid var(--accent) !important;
+}
+[data-baseweb="tab"]:hover {
+    color: var(--text-primary) !important;
 }
 
 /* ── Divider ── */
-hr { border-color: #1e2130; }
+hr { border-color: var(--border); }
 
-/* ── Success / error ── */
-.stSuccess { background: #0a2e1a !important; border: 1px solid #166534 !important; color: #4ade80 !important; border-radius: 8px !important; }
-.stError   { background: #2a0a0a !important; border: 1px solid #7f1d1d !important; color: #f87171 !important; border-radius: 8px !important; }
-.stWarning { background: #1c1a08 !important; border: 1px solid #713f12 !important; color: #fbbf24 !important; border-radius: 8px !important; }
-.stInfo    { background: #0a1628 !important; border: 1px solid #1e3a5f !important; color: #60a5fa !important; border-radius: 8px !important; }
-
-/* ── Section header pill ── */
-.section-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #161922; border: 1px solid #1e2130;
-    border-radius: 20px; padding: 4px 14px;
-    font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #6b7280;
-    margin-bottom: 0.75rem;
+/* ── Alerts ── */
+.stSuccess {
+    background: rgba(104,211,145,0.06) !important;
+    border: 1px solid rgba(104,211,145,0.25) !important;
+    color: #68d391 !important;
+    border-radius: 10px !important;
 }
-.section-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: #2563eb; }
+.stError {
+    background: rgba(245,101,101,0.06) !important;
+    border: 1px solid rgba(245,101,101,0.25) !important;
+    color: #fc8181 !important;
+    border-radius: 10px !important;
+}
+.stWarning {
+    background: rgba(246,173,85,0.06) !important;
+    border: 1px solid rgba(246,173,85,0.25) !important;
+    color: #f6ad55 !important;
+    border-radius: 10px !important;
+}
+.stInfo {
+    background: rgba(99,179,237,0.06) !important;
+    border: 1px solid rgba(99,179,237,0.22) !important;
+    color: var(--accent) !important;
+    border-radius: 10px !important;
+}
+
+/* ── Spinner ── */
+[data-testid="stSpinner"] > div {
+    border-color: var(--accent) transparent transparent transparent !important;
+}
+
+/* ── Download button ── */
+.stDownloadButton > button {
+    background: transparent;
+    color: var(--accent3);
+    border: 1px solid rgba(104,211,145,0.28);
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 0.55rem 1.6rem;
+    transition: all 0.2s;
+}
+.stDownloadButton > button:hover {
+    border-color: var(--accent3);
+    box-shadow: 0 0 20px rgba(104,211,145,0.15);
+    color: #fff;
+}
 
 /* ── Page title ── */
 .page-title {
-    font-size: 28px; font-weight: 600; color: #f1f5f9;
-    letter-spacing: -0.02em; margin-bottom: 0.25rem;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    margin-bottom: 0.2rem;
+    line-height: 1.1;
+    position: relative;
+    display: inline-block;
 }
-.page-sub { font-size: 14px; color: #6b7280; margin-bottom: 2rem; }
+.page-title::after {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin-top: 8px;
+    box-shadow: 0 0 12px var(--accent);
+}
+.page-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+    margin-bottom: 2.2rem;
+    letter-spacing: 0.02em;
+    font-weight: 400;
+}
+
+/* ── Section label ── */
+.section-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 3px 12px 3px 8px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.9rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+.section-pill .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.7); }
+}
 
 /* ── Stat badge ── */
 .stat-badge {
     display: inline-block;
-    background: #0f2040; color: #60a5fa;
-    border: 1px solid #1e3a5f;
-    border-radius: 6px; padding: 2px 10px;
-    font-size: 12px; font-family: 'DM Mono', monospace;
+    background: rgba(99,179,237,0.08);
+    color: var(--accent);
+    border: 1px solid rgba(99,179,237,0.22);
+    border-radius: 6px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
+    letter-spacing: 0.04em;
 }
 
 /* ── Score card ── */
 .score-card {
-    background: linear-gradient(135deg, #0f2040 0%, #0a1628 100%);
-    border: 1px solid #1e3a5f;
-    border-radius: 14px;
-    padding: 1.5rem 2rem;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    padding: 2rem 2.2rem;
     text-align: center;
+    position: relative;
+    overflow: hidden;
 }
-.score-card .score-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; margin-bottom: 0.5rem; }
-.score-card .score-value { font-size: 48px; font-weight: 600; color: #60a5fa; font-family: 'DM Mono', monospace; }
-.score-card .score-type  { font-size: 13px; color: #94a3b8; margin-top: 0.25rem; }
+.score-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.score-card::after {
+    content: '';
+    position: absolute;
+    bottom: -40%; left: 50%;
+    transform: translateX(-50%);
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, rgba(99,179,237,0.10), transparent 70%);
+    pointer-events: none;
+}
+.score-card .score-label {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+.score-card .score-value {
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 40px rgba(99,179,237,0.4);
+}
+.score-card .score-type {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    letter-spacing: 0.06em;
+    font-family: 'JetBrains Mono', monospace;
+}
 
 /* ── Feature importance bar ── */
-.fi-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
-.fi-name { width: 140px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'DM Mono', monospace; font-size: 12px; }
-.fi-bar-bg { flex: 1; background: #161922; border-radius: 4px; height: 8px; }
-.fi-bar { background: linear-gradient(90deg, #2563eb, #60a5fa); border-radius: 4px; height: 8px; }
-.fi-val { width: 42px; text-align: right; color: #6b7280; font-size: 12px; font-family: 'DM Mono', monospace; }
+.fi-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+}
+.fi-row:last-child { border-bottom: none; }
+.fi-name {
+    width: 150px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+.fi-bar-bg {
+    flex: 1;
+    background: var(--surface);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+}
+.fi-bar {
+    background: linear-gradient(90deg, var(--accent), rgba(99,179,237,0.4));
+    border-radius: 3px;
+    height: 6px;
+    box-shadow: 2px 0 8px rgba(99,179,237,0.3);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.fi-val {
+    width: 48px;
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+}
 
-/* ── Logo / brand ── */
-.brand { font-size: 18px; font-weight: 600; color: #f1f5f9; letter-spacing: -0.01em; }
-.brand span { color: #2563eb; }
+/* ── Brand / Logo ── */
+.brand {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.brand span { color: var(--accent); }
+.brand-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    margin-left: 2px;
+    vertical-align: middle;
+    position: relative;
+    top: -2px;
+    box-shadow: 0 0 8px var(--accent2);
+}
+
+/* ── Nav radio buttons ── */
+[data-testid="stRadio"] > label {
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.14em !important;
+    color: var(--text-dim) !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.5rem !important;
+}
+[data-testid="stRadio"] > div {
+    gap: 4px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+[data-testid="stRadio"] > div label {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--text-muted) !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+}
+[data-testid="stRadio"] > div label:hover {
+    background: var(--surface2) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+[data-testid="stRadio"] > div [aria-checked="true"] {
+    background: rgba(99,179,237,0.08) !important;
+    border-color: rgba(99,179,237,0.25) !important;
+    color: var(--accent) !important;
+}
+
+/* ── Quick tips list ── */
+.tip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.tip-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+.tip-list li::before {
+    content: '→';
+    color: var(--accent);
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Sidebar status card ── */
+.status-card {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+}
+.status-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 6px;
+}
+.status-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99,179,237,0.3); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -187,14 +633,21 @@ if "filename" not in st.session_state:
 #  Sidebar
 # ─────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="brand">Data<span>Lens</span></div>', unsafe_allow_html=True)
-    st.markdown('<p style="font-size:12px;color:#374151;margin-bottom:1.5rem;">Dataset Exploration Platform</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="brand">Data<span>Lens</span><span class="brand-dot"></span></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<p style="font-size:11px;color:#2d3748;margin-top:4px;margin-bottom:1.5rem;'
+        'letter-spacing:0.06em;font-family:\'JetBrains Mono\',monospace;">DATASET EXPLORATION PLATFORM</p>',
+        unsafe_allow_html=True,
+    )
     st.divider()
 
     menu = st.radio(
         "Navigation",
         ["◈  Overview", "📋  Data Table", "📊  Visualize", "🤖  ML Model"],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
     page = menu.split("  ")[1]
 
@@ -203,39 +656,57 @@ with st.sidebar:
     # Dataset status
     if st.session_state.data is not None:
         df = st.session_state.data
-        st.markdown(f'<p style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:.5rem;">Active Dataset</p>', unsafe_allow_html=True)
-        st.markdown(f'<p style="font-size:13px;color:#e2e8f0;font-weight:500;margin-bottom:.25rem;">{st.session_state.filename}</p>', unsafe_allow_html=True)
-        st.markdown(f'<span class="stat-badge">{df.shape[0]:,} rows × {df.shape[1]} cols</span>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="status-card">'
+            f'<div class="status-label">Active Dataset</div>'
+            f'<div class="status-name">{st.session_state.filename}</div>'
+            f'<span class="stat-badge">{df.shape[0]:,} × {df.shape[1]}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
         if st.button("⟳  Clear dataset", use_container_width=True):
             st.session_state.data = None
             st.session_state.filename = None
             st.rerun()
     else:
-        st.markdown('<p style="font-size:12px;color:#374151;">No dataset loaded.<br>Go to Overview to upload.</p>', unsafe_allow_html=True)
+        st.markdown(
+            '<p style="font-size:12px;color:#2d3748;line-height:1.7;">'
+            'No dataset loaded.<br>Go to <b style="color:#4a5568;">Overview</b> to upload.</p>',
+            unsafe_allow_html=True,
+        )
 
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown('<p style="font-size:11px;color:#374151;">DataLens v2.0 · Built with Streamlit</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p style="font-size:10px;color:#1e2533;font-family:\'JetBrains Mono\',monospace;'
+        'letter-spacing:0.06em;">DATALENS v2.0 · STREAMLIT</p>',
+        unsafe_allow_html=True,
+    )
 
 
 # ─────────────────────────────────────────
-#  Helper
+#  Helpers
 # ─────────────────────────────────────────
 def no_data_warning():
-    st.markdown('<br>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     st.info("📂  No dataset loaded yet. Head to **Overview** to upload a CSV.")
 
 
 def section_header(label: str):
-    st.markdown(f'<div class="section-pill"><span class="dot"></span>{label}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="section-pill"><span class="dot"></span>{label}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 # ─────────────────────────────────────────
-#  PAGE: Overview (Upload + Summary)
+#  PAGE: Overview
 # ─────────────────────────────────────────
 if page == "Overview":
     st.markdown('<div class="page-title">Overview</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Upload a CSV and inspect your dataset at a glance.</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="page-sub">Upload a CSV and inspect your dataset at a glance.</div>',
+        unsafe_allow_html=True,
+    )
 
     col_upload, col_info = st.columns([1.2, 1], gap="large")
 
@@ -255,7 +726,7 @@ if page == "Overview":
     with col_info:
         section_header("Quick tips")
         st.markdown("""
-<ul style="font-size:13px;color:#6b7280;line-height:2;padding-left:1.2rem;">
+<ul class="tip-list">
   <li>CSV files up to 200 MB are supported</li>
   <li>Mixed numeric &amp; categorical columns work fine</li>
   <li>Missing values are handled automatically in ML</li>
@@ -277,7 +748,6 @@ if page == "Overview":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Column types & missing ──
         col_a, col_b = st.columns(2, gap="large")
 
         with col_a:
@@ -310,14 +780,16 @@ if page == "Overview":
 # ─────────────────────────────────────────
 elif page == "Data Table":
     st.markdown('<div class="page-title">Data Table</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Browse, filter, and search your raw data.</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="page-sub">Browse, filter, and search your raw data.</div>',
+        unsafe_allow_html=True,
+    )
 
     if st.session_state.data is None:
         no_data_warning()
     else:
         df = st.session_state.data
 
-        # ── Filter controls ──
         section_header("Filters")
         fcol1, fcol2, fcol3 = st.columns([1.5, 1.5, 1])
 
@@ -339,7 +811,6 @@ elif page == "Data Table":
         section_header(f"{len(filtered):,} rows matched")
         st.dataframe(display_df, use_container_width=True, height=480, hide_index=False)
 
-        # ── Download filtered ──
         csv_bytes = filtered.to_csv(index=False).encode("utf-8")
         st.download_button(
             label="⬇  Download filtered CSV",
@@ -354,7 +825,10 @@ elif page == "Data Table":
 # ─────────────────────────────────────────
 elif page == "Visualize":
     st.markdown('<div class="page-title">Visualize</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Explore distributions, correlations, and relationships.</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="page-sub">Explore distributions, correlations, and relationships.</div>',
+        unsafe_allow_html=True,
+    )
 
     if st.session_state.data is None:
         no_data_warning()
@@ -366,7 +840,6 @@ elif page == "Visualize":
 
         tab1, tab2, tab3, tab4 = st.tabs(["Distribution", "Correlation", "Scatter", "Box / Violin"])
 
-        # ── Tab 1: Distribution ──
         with tab1:
             st.markdown("<br>", unsafe_allow_html=True)
             d_col1, d_col2 = st.columns([1, 3])
@@ -382,7 +855,6 @@ elif page == "Visualize":
                 fig = plot_distribution(df, dist_col, bins=bins, show_kde=show_kde)
                 st.pyplot(fig)
 
-        # ── Tab 2: Correlation heatmap ──
         with tab2:
             st.markdown("<br>", unsafe_allow_html=True)
             if len(num_cols) < 2:
@@ -399,7 +871,6 @@ elif page == "Visualize":
                     else:
                         st.info("Select at least 2 columns.")
 
-        # ── Tab 3: Scatter ──
         with tab3:
             st.markdown("<br>", unsafe_allow_html=True)
             if len(num_cols) < 2:
@@ -416,7 +887,6 @@ elif page == "Visualize":
                 fig = plot_scatter(df, x_col, y_col, hue=hue)
                 st.pyplot(fig)
 
-        # ── Tab 4: Box / Violin ──
         with tab4:
             st.markdown("<br>", unsafe_allow_html=True)
             b1, b2, b3 = st.columns(3)
@@ -436,7 +906,10 @@ elif page == "Visualize":
 # ─────────────────────────────────────────
 elif page == "ML Model":
     st.markdown('<div class="page-title">ML Model</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Train a baseline model, inspect metrics and feature importance.</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="page-sub">Train a baseline model, inspect metrics and feature importance.</div>',
+        unsafe_allow_html=True,
+    )
 
     if st.session_state.data is None:
         no_data_warning()
@@ -466,7 +939,6 @@ elif page == "ML Model":
                 st.markdown("<br>", unsafe_allow_html=True)
                 section_header("Results")
 
-                # ── Score card ──
                 r1, r2, r3 = st.columns([1, 1, 2])
                 metric_name = "Accuracy" if results["problem"] == "Classification" else "R² Score"
                 score_val = results["score"]
@@ -488,10 +960,12 @@ elif page == "ML Model":
                 with r3:
                     if results.get("extra_metrics"):
                         section_header("Extra metrics")
-                        em_df = pd.DataFrame(list(results["extra_metrics"].items()), columns=["Metric", "Value"])
+                        em_df = pd.DataFrame(
+                            list(results["extra_metrics"].items()),
+                            columns=["Metric", "Value"],
+                        )
                         st.dataframe(em_df, use_container_width=True, hide_index=True)
 
-                # ── Feature importance ──
                 if results.get("feature_importance") is not None:
                     st.markdown("<br>", unsafe_allow_html=True)
                     section_header("Feature importance")
@@ -506,12 +980,10 @@ elif page == "ML Model":
   <div class="fi-val">{row['Importance']:.3f}</div>
 </div>""", unsafe_allow_html=True)
 
-                # ── Confusion matrix / residuals ──
                 if results.get("confusion_matrix") is not None:
                     st.markdown("<br>", unsafe_allow_html=True)
                     section_header("Confusion matrix")
-                    cm_fig = results["confusion_matrix"]
-                    st.pyplot(cm_fig)
+                    st.pyplot(results["confusion_matrix"])
 
                 if results.get("residual_plot") is not None:
                     st.markdown("<br>", unsafe_allow_html=True)
