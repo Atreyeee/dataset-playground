@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from utils.load_data import load_csv, load_sample_dataset
-from utils.summary import get_summary, generate_insights
-from utils.visualization import plot_distribution, plot_correlation, plot_scatter, plot_boxplot, plot_bar, plot_line, plot_pie, plot_histogram, plot_pairplot
-from utils.ml_model import run_ml_model
+from load_data import load_csv, load_sample_dataset
+from summary import get_summary, generate_insights
+from visualization import plot_distribution, plot_correlation, plot_scatter, plot_boxplot, plot_bar, plot_line, plot_pie, plot_histogram, plot_pairplot
+from ml_model import run_ml_model
 
 st.set_page_config(page_title="DataLens — Dataset Playground", page_icon="◈", layout="wide", initial_sidebar_state="expanded")
 
