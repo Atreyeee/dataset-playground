@@ -2,833 +2,673 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from load_data import load_csv
-from summary import get_summary
-from visualization import plot_distribution, plot_correlation, plot_scatter, plot_boxplot
-from ml_model import run_ml_model
+from utils.load_data import load_csv, load_sample_dataset
+from utils.summary import get_summary, generate_insights
+from utils.visualization import plot_distribution, plot_correlation, plot_scatter, plot_boxplot, plot_bar, plot_line, plot_pie, plot_histogram, plot_pairplot
+from utils.ml_model import run_ml_model
 
-# ─────────────────────────────────────────
-#  Page config
-# ─────────────────────────────────────────
-st.set_page_config(
-    page_title="DataLens — Dataset Playground",
-    page_icon="◈",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+st.set_page_config(page_title="DataLens — Dataset Playground", page_icon="◈", layout="wide", initial_sidebar_state="expanded")
 
-# ─────────────────────────────────────────
-#  Global CSS — Bento Grid / Aurora theme
-# ─────────────────────────────────────────
+# ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── CSS Variables ── */
-:root {
-    --bg:          #050810;
-    --surface:     #0b0f1a;
-    --surface2:    #0f1520;
-    --border:      rgba(99,179,237,0.10);
-    --border2:     rgba(99,179,237,0.18);
-    --accent:      #63b3ed;
-    --accent2:     #f6ad55;
-    --accent3:     #68d391;
-    --text-primary:#e8f0fe;
-    --text-muted:  #4a5568;
-    --text-dim:    #2d3748;
-    --glow:        rgba(99,179,237,0.15);
-    --glow2:       rgba(246,173,85,0.12);
-}
-
-/* ── Base ── */
-@font-face { }
+/* ── Reset & Base ─────────────────────────────────────────── */
 html, body, [class*="css"] {
-    font-family: 'Syne', sans-serif;
-}
-.stApp {
-    background: var(--bg);
-    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    color: #111827;
 }
 
-/* ── Aurora background mesh ── */
-.stApp::before {
-    content: '';
-    position: fixed;
-    top: -40%;
-    left: -20%;
-    width: 70%;
-    height: 70%;
-    background: radial-gradient(ellipse, rgba(99,179,237,0.06) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 0;
-    animation: aurora1 12s ease-in-out infinite alternate;
-}
-.stApp::after {
-    content: '';
-    position: fixed;
-    bottom: -30%;
-    right: -15%;
-    width: 60%;
-    height: 60%;
-    background: radial-gradient(ellipse, rgba(246,173,85,0.05) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 0;
-    animation: aurora2 15s ease-in-out infinite alternate;
-}
-@keyframes aurora1 {
-    0%   { transform: translate(0,0) scale(1); }
-    100% { transform: translate(5%,8%) scale(1.1); }
-}
-@keyframes aurora2 {
-    0%   { transform: translate(0,0) scale(1); }
-    100% { transform: translate(-6%,-5%) scale(1.08); }
+/* ── Top Toolbar (Deploy + 3-dot menu) ───────────────────── */
+[data-testid="stToolbar"],
+header[data-testid="stHeader"],
+.stAppDeployButton,
+[data-testid="stHeader"] {
+    background-color: #FACC15 !important;
 }
 
-/* ── Sidebar ── */
-[data-testid="stSidebar"] {
-    background: var(--surface) !important;
-    border-right: 1px solid var(--border2) !important;
-    backdrop-filter: blur(12px);
-}
-[data-testid="stSidebar"] .block-container {
-    padding: 2.2rem 1.4rem;
+header[data-testid="stHeader"] {
+    background: #FACC15 !important;
+    border-bottom: 1px solid #EAB308 !important;
 }
 
-/* ── Hide default header ── */
-header[data-testid="stHeader"] { display: none; }
-.block-container {
-    padding: 2.2rem 3rem 5rem !important;
-    max-width: 1320px;
-}
-
-/* ── Metric cards ── */
-[data-testid="stMetric"] {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    padding: 1.2rem 1.5rem;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.25s, box-shadow 0.25s;
-}
-[data-testid="stMetric"]:hover {
-    border-color: rgba(99,179,237,0.35);
-    box-shadow: 0 0 28px var(--glow);
-}
-[data-testid="stMetric"]::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.6;
-}
-[data-testid="stMetricLabel"] {
-    font-size: 10px !important;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--text-muted) !important;
-    font-weight: 600 !important;
-}
-[data-testid="stMetricValue"] {
-    font-size: 32px !important;
-    font-weight: 700 !important;
-    color: var(--text-primary) !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    letter-spacing: -0.02em;
-}
-[data-testid="stMetricDelta"] { font-size: 12px !important; }
-
-/* ── Dataframe ── */
-[data-testid="stDataFrame"] {
-    border: 1px solid var(--border2) !important;
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--surface2);
-}
-
-/* ── Buttons ── */
-.stButton > button {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    padding: 0.55rem 1.6rem;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-}
-.stButton > button::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(99,179,237,0.08), transparent);
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-.stButton > button:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 20px var(--glow), inset 0 0 20px rgba(99,179,237,0.04);
-    color: #fff;
-}
-.stButton > button:hover::before { opacity: 1; }
-
-/* ── Selectbox / inputs ── */
-[data-baseweb="select"] > div {
-    background: var(--surface2) !important;
-    border: 1px solid var(--border2) !important;
-    border-radius: 10px !important;
-    color: var(--text-primary) !important;
-    font-family: 'Syne', sans-serif !important;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-[data-baseweb="select"] > div:focus-within {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(99,179,237,0.12) !important;
-}
-.stSelectbox label, .stMultiSelect label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted) !important;
-    font-weight: 600;
-}
-.stTextInput > div > div {
-    background: var(--surface2) !important;
-    border: 1px solid var(--border2) !important;
-    border-radius: 10px !important;
-    color: var(--text-primary) !important;
-}
-.stTextInput > div > div:focus-within {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(99,179,237,0.12) !important;
-}
-.stTextInput label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted) !important;
-    font-weight: 600;
-}
-
-/* ── Sliders ── */
-[data-testid="stSlider"] [data-baseweb="slider"] {
-    padding: 0 4px;
-}
-[data-testid="stSlider"] label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted) !important;
-    font-weight: 600;
-}
-
-/* ── Checkbox ── */
-.stCheckbox label span {
-    font-size: 13px !important;
-    color: var(--text-primary) !important;
-}
-
-/* ── File uploader ── */
-[data-testid="stFileUploader"] {
-    background: var(--surface2);
-    border: 1.5px dashed rgba(99,179,237,0.22);
-    border-radius: 16px;
-    padding: 1.5rem;
-    transition: border-color 0.25s, box-shadow 0.25s;
-}
-[data-testid="stFileUploader"]:hover {
-    border-color: rgba(99,179,237,0.45);
-    box-shadow: 0 0 30px var(--glow);
-}
-
-/* ── Expander ── */
-[data-testid="stExpander"] {
-    background: var(--surface2);
-    border: 1px solid var(--border2) !important;
-    border-radius: 12px;
-}
-
-/* ── Tabs ── */
-[data-baseweb="tab-list"] {
-    background: transparent;
-    border-bottom: 1px solid var(--border);
-    gap: 0;
-}
-[data-baseweb="tab"] {
+/* Toolbar buttons inside header */
+[data-testid="stToolbar"] button,
+[data-testid="stToolbarActions"] button,
+[data-testid="stDecoration"] {
     background: transparent !important;
-    color: var(--text-muted) !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.06em !important;
-    text-transform: uppercase !important;
-    padding: 0.7rem 1.4rem !important;
-    border-bottom: 2px solid transparent !important;
-    font-family: 'Syne', sans-serif !important;
-    transition: color 0.2s !important;
-}
-[aria-selected="true"][data-baseweb="tab"] {
-    color: var(--accent) !important;
-    border-bottom: 2px solid var(--accent) !important;
-}
-[data-baseweb="tab"]:hover {
-    color: var(--text-primary) !important;
+    color: #111827 !important;
 }
 
-/* ── Divider ── */
-hr { border-color: var(--border); }
-
-/* ── Alerts ── */
-.stSuccess {
-    background: rgba(104,211,145,0.06) !important;
-    border: 1px solid rgba(104,211,145,0.25) !important;
-    color: #68d391 !important;
-    border-radius: 10px !important;
-}
-.stError {
-    background: rgba(245,101,101,0.06) !important;
-    border: 1px solid rgba(245,101,101,0.25) !important;
-    color: #fc8181 !important;
-    border-radius: 10px !important;
-}
-.stWarning {
-    background: rgba(246,173,85,0.06) !important;
-    border: 1px solid rgba(246,173,85,0.25) !important;
-    color: #f6ad55 !important;
-    border-radius: 10px !important;
-}
-.stInfo {
-    background: rgba(99,179,237,0.06) !important;
-    border: 1px solid rgba(99,179,237,0.22) !important;
-    color: var(--accent) !important;
-    border-radius: 10px !important;
+[data-testid="stDecoration"] {
+    background: #FACC15 !important;
 }
 
-/* ── Spinner ── */
-[data-testid="stSpinner"] > div {
-    border-color: var(--accent) transparent transparent transparent !important;
+/* The top status/deploy bar */
+.stAppDeployButton > button {
+    background: #111827 !important;
+    color: #FACC15 !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
-/* ── Download button ── */
-.stDownloadButton > button {
+.stAppDeployButton > button:hover {
+    background: #374151 !important;
+    transform: none !important;
+}
+
+/* Background */
+.stApp {
+    background-color: #F3F4F8;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: #FFFFFF;
+    border-right: 1px solid #E5E7EB;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    padding: 0;
+}
+
+/* Hide default sidebar header */
+[data-testid="stSidebarNav"] { display: none; }
+
+/* Sidebar radio — navigation pills */
+[data-testid="stSidebar"] .stRadio > div {
+    gap: 4px;
+    flex-direction: column;
+}
+
+[data-testid="stSidebar"] .stRadio label {
     background: transparent;
-    color: var(--accent3);
-    border: 1px solid rgba(104,211,145,0.28);
-    border-radius: 10px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    padding: 0.55rem 1.6rem;
-    transition: all 0.2s;
-}
-.stDownloadButton > button:hover {
-    border-color: var(--accent3);
-    box-shadow: 0 0 20px rgba(104,211,145,0.15);
-    color: #fff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6B7280;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none !important;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* ── Page title ── */
-.page-title {
-    font-size: 36px;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.03em;
-    margin-bottom: 0.2rem;
-    line-height: 1.1;
-    position: relative;
+[data-testid="stSidebar"] .stRadio label:hover {
+    background: #EFF6FF;
+    color: #2563EB;
+}
+
+[data-testid="stSidebar"] .stRadio [aria-checked="true"] + label,
+[data-testid="stSidebar"] .stRadio input:checked + div label {
+    background: #EFF6FF;
+    color: #2563EB;
+}
+
+[data-testid="stSidebar"] .stRadio [data-baseweb="radio"] [aria-checked="true"] ~ div {
+    color: #2563EB;
+    font-weight: 600;
+}
+
+/* ── Brand Logo ───────────────────────────────────────────── */
+.brand {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.5px;
+    padding: 28px 20px 4px 20px;
+    line-height: 1;
+}
+
+.brand span { color: #2563EB; }
+.brand-dot {
     display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #FACC15;
+    margin-left: 2px;
+    vertical-align: middle;
+    margin-bottom: 3px;
 }
-.page-title::after {
-    content: '';
-    display: block;
-    width: 32px;
-    height: 3px;
-    background: var(--accent);
-    border-radius: 2px;
-    margin-top: 8px;
-    box-shadow: 0 0 12px var(--accent);
+
+/* ── Status Card (Sidebar) ────────────────────────────────── */
+.status-card {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 0 12px 12px 12px;
 }
-.page-sub {
+
+.status-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.status-name {
     font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 0.75rem;
-    margin-bottom: 2.2rem;
-    letter-spacing: 0.02em;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-badge {
+    display: inline-block;
+    background: #EFF6FF;
+    color: #2563EB;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+}
+
+/* ── Page Title ───────────────────────────────────────────── */
+.page-header {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: #6B7280;
     font-weight: 400;
 }
 
-/* ── Section label ── */
+/* ── Section Pill ─────────────────────────────────────────── */
 .section-pill {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 7px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    padding: 3px 12px 3px 8px;
-    font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
     text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 0.9rem;
-    font-family: 'JetBrains Mono', monospace;
-}
-.section-pill .dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
-    animation: pulse 2.4s ease-in-out infinite;
-}
-@keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.5; transform: scale(0.7); }
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
 }
 
-/* ── Stat badge ── */
-.stat-badge {
+.dot {
     display: inline-block;
-    background: rgba(99,179,237,0.08);
-    color: var(--accent);
-    border: 1px solid rgba(99,179,237,0.22);
-    border-radius: 6px;
-    padding: 3px 12px;
-    font-size: 11px;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 500;
-    letter-spacing: 0.04em;
+    width: 8px;
+    height: 8px;
+    background: #FACC15;
+    border-radius: 2px;
 }
 
-/* ── Score card ── */
-.score-card {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 18px;
-    padding: 2rem 2.2rem;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
+/* ── Cards ────────────────────────────────────────────────── */
+.card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
 }
-.score-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+
+/* ── Metric Cards ─────────────────────────────────────────── */
+[data-testid="stMetric"] {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 20px 22px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-.score-card::after {
-    content: '';
-    position: absolute;
-    bottom: -40%; left: 50%;
-    transform: translateX(-50%);
-    width: 140px; height: 140px;
-    background: radial-gradient(circle, rgba(99,179,237,0.10), transparent 70%);
-    pointer-events: none;
-}
-.score-card .score-label {
-    font-size: 9.5px;
+
+[data-testid="stMetricLabel"] {
+    font-size: 11px !important;
+    font-weight: 600 !important;
     text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--text-muted);
-    margin-bottom: 0.6rem;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.07em;
+    color: #9CA3AF !important;
 }
-.score-card .score-value {
+
+[data-testid="stMetricValue"] {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    font-family: 'DM Mono', monospace !important;
+    letter-spacing: -1px;
+}
+
+/* ── Score Card (ML) ──────────────────────────────────────── */
+.score-card {
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    border-radius: 14px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.25);
+    color: white;
+}
+
+.score-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 12px;
+}
+
+.score-value {
     font-size: 52px;
     font-weight: 700;
-    color: var(--accent);
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: -0.03em;
-    text-shadow: 0 0 40px rgba(99,179,237,0.4);
-}
-.score-card .score-type {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 0.4rem;
-    letter-spacing: 0.06em;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-/* ── Feature importance bar ── */
-.fi-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-    font-size: 12px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-}
-.fi-row:last-child { border-bottom: none; }
-.fi-name {
-    width: 150px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    flex-shrink: 0;
-}
-.fi-bar-bg {
-    flex: 1;
-    background: var(--surface);
-    border-radius: 3px;
-    height: 6px;
-    overflow: hidden;
-}
-.fi-bar {
-    background: linear-gradient(90deg, var(--accent), rgba(99,179,237,0.4));
-    border-radius: 3px;
-    height: 6px;
-    box-shadow: 2px 0 8px rgba(99,179,237,0.3);
-    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-}
-.fi-val {
-    width: 48px;
-    text-align: right;
-    color: var(--text-muted);
-    font-size: 11px;
-    font-family: 'JetBrains Mono', monospace;
-    flex-shrink: 0;
-}
-
-/* ── Brand / Logo ── */
-.brand {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
+    font-family: 'DM Mono', monospace;
     line-height: 1;
-}
-.brand span { color: var(--accent); }
-.brand-dot {
-    display: inline-block;
-    width: 6px; height: 6px;
-    background: var(--accent2);
-    border-radius: 50%;
-    margin-left: 2px;
-    vertical-align: middle;
-    position: relative;
-    top: -2px;
-    box-shadow: 0 0 8px var(--accent2);
+    margin-bottom: 10px;
+    letter-spacing: -2px;
 }
 
-/* ── Nav radio buttons ── */
-[data-testid="stRadio"] > label {
-    font-size: 10px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.14em !important;
-    color: var(--text-dim) !important;
-    font-weight: 700 !important;
-    margin-bottom: 0.5rem !important;
-}
-[data-testid="stRadio"] > div {
-    gap: 4px !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-[data-testid="stRadio"] > div label {
-    background: transparent !important;
-    border: 1px solid transparent !important;
-    border-radius: 8px !important;
-    padding: 8px 12px !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: var(--text-muted) !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-    display: flex !important;
-    align-items: center !important;
-}
-[data-testid="stRadio"] > div label:hover {
-    background: var(--surface2) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--border) !important;
-}
-[data-testid="stRadio"] > div [aria-checked="true"] {
-    background: rgba(99,179,237,0.08) !important;
-    border-color: rgba(99,179,237,0.25) !important;
-    color: var(--accent) !important;
-}
-
-/* ── Quick tips list ── */
-.tip-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.tip-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.5;
-}
-.tip-list li::before {
-    content: '→';
-    color: var(--accent);
+.score-type {
     font-size: 12px;
-    flex-shrink: 0;
-    margin-top: 1px;
-    font-family: 'JetBrains Mono', monospace;
+    opacity: 0.75;
+    font-weight: 500;
+    background: rgba(255,255,255,0.15);
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
 }
 
-/* ── Sidebar status card ── */
-.status-card {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
+/* ── Buttons ──────────────────────────────────────────────── */
+.stButton > button {
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    letter-spacing: 0.01em;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 1px 3px rgba(37,99,235,0.3) !important;
+    cursor: pointer;
+}
+
+.stButton > button:hover {
+    background: #1D4ED8 !important;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.35) !important;
+    transform: translateY(-1px);
+}
+
+.stButton > button:active {
+    transform: translateY(0px) !important;
+}
+
+/* Secondary / clear button */
+.stButton > button[kind="secondary"],
+button[data-testid*="clear"] {
+    background: #FFFFFF !important;
+    color: #374151 !important;
+    border: 1px solid #D1D5DB !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+
+.stButton > button[kind="secondary"]:hover {
+    background: #F9FAFB !important;
+    border-color: #9CA3AF !important;
+    transform: none;
+}
+
+/* ── File Uploader ────────────────────────────────────────── */
+[data-testid="stFileUploader"] {
+    background: #FFFFFF;
+    border: 2px dashed #D1D5DB;
     border-radius: 12px;
-    padding: 1rem 1.1rem;
-    margin-bottom: 1rem;
-}
-.status-label {
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--text-dim);
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    margin-bottom: 6px;
-}
-.status-name {
-    font-size: 13px;
-    color: var(--text-primary);
-    font-weight: 600;
-    margin-bottom: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 20px;
+    transition: border-color 0.2s;
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--surface); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(99,179,237,0.3); }
+[data-testid="stFileUploader"]:hover {
+    border-color: #2563EB;
+}
+
+/* ── Select / Input ───────────────────────────────────────── */
+[data-baseweb="select"] > div,
+[data-baseweb="input"] > div {
+    border-radius: 8px !important;
+    border-color: #D1D5DB !important;
+    background: #FFFFFF !important;
+    font-size: 14px !important;
+}
+
+[data-baseweb="select"]:focus-within > div,
+[data-baseweb="input"]:focus-within > div {
+    border-color: #2563EB !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+}
+
+/* ── Dataframe / Table ────────────────────────────────────── */
+[data-testid="stDataFrame"] {
+    border-radius: 10px !important;
+    overflow: hidden;
+    border: 1px solid #E5E7EB !important;
+}
+
+/* ── Alert / Info boxes ───────────────────────────────────── */
+[data-testid="stAlert"] {
+    border-radius: 10px !important;
+    border-left-width: 4px !important;
+    font-size: 14px;
+}
+
+.stSuccess {
+    background: #F0FDF4 !important;
+    border-color: #22C55E !important;
+    color: #166534 !important;
+}
+
+.stInfo {
+    background: #EFF6FF !important;
+    border-color: #2563EB !important;
+    color: #1E40AF !important;
+}
+
+.stError {
+    background: #FEF2F2 !important;
+    border-color: #EF4444 !important;
+}
+
+/* ── Spinner ──────────────────────────────────────────────── */
+[data-testid="stSpinner"] {
+    color: #2563EB !important;
+}
+
+/* ── Divider ──────────────────────────────────────────────── */
+hr {
+    border: none;
+    border-top: 1px solid #E5E7EB;
+    margin: 16px 0;
+}
+
+/* ── Empty State ──────────────────────────────────────────── */
+.empty-state {
+    background: #FFFFFF;
+    border: 1px dashed #D1D5DB;
+    border-radius: 14px;
+    padding: 56px 40px;
+    text-align: center;
+    margin-top: 16px;
+}
+
+.empty-state-icon {
+    font-size: 36px;
+    margin-bottom: 16px;
+}
+
+.empty-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.empty-state-desc {
+    font-size: 14px;
+    color: #9CA3AF;
+    max-width: 360px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* ── Chart wrapper ────────────────────────────────────────── */
+.chart-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-top: 20px;
+}
+
+.chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+/* ── Pyplot wrapper ───────────────────────────────────────── */
+[data-testid="stImage"], .stPyplot {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* ── Main content padding ─────────────────────────────────── */
+.block-container {
+    padding: 52px 40px 40px 40px !important;
+    max-width: 1280px;
+}
+
+/* ── Selectbox label ──────────────────────────────────────── */
+.stSelectbox label, .stFileUploader label {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    margin-bottom: 6px !important;
+}
+
+/* ── Sidebar nav label hidden ─────────────────────────────── */
+[data-testid="stSidebar"] .stRadio > label {
+    display: none;
+}
+
+/* ── Sidebar padding ──────────────────────────────────────── */
+[data-testid="stSidebar"] > div > div {
+    padding: 0 8px;
+}
+
+/* ── Highlight max cell in dataframe ─────────────────────── */
+.stDataFrame [data-testid="stDataFrameResizable"] {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-
-# ─────────────────────────────────────────
-#  Session state
-# ─────────────────────────────────────────
+# ─── Session State ─────────────────────────────────────────────────────────────
 if "data" not in st.session_state:
     st.session_state.data = None
 if "filename" not in st.session_state:
     st.session_state.filename = None
 
+# ─── Helpers ───────────────────────────────────────────────────────────────────
+def no_data_warning():
+    st.markdown("""
+    <div class="empty-state">
+        <div class="empty-state-icon">📂</div>
+        <div class="empty-state-title">No dataset loaded yet</div>
+        <div class="empty-state-desc">Head to <strong>Overview</strong> to upload a CSV file or load the sample Titanic dataset to get started.</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────
-#  Sidebar
-# ─────────────────────────────────────────
+def section_header(label: str):
+    st.markdown(f'<div class="section-pill"><span class="dot"></span>{label}</div>', unsafe_allow_html=True)
+
+# ─── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown(
-        '<div class="brand">Data<span>Lens</span><span class="brand-dot"></span></div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<p style="font-size:11px;color:#2d3748;margin-top:4px;margin-bottom:1.5rem;'
-        'letter-spacing:0.06em;font-family:\'JetBrains Mono\',monospace;">DATASET EXPLORATION PLATFORM</p>',
-        unsafe_allow_html=True,
-    )
-    st.divider()
+    st.markdown('<div class="brand">Dataset<span> Playground</span><span class="brand-dot"></span></div>', unsafe_allow_html=True)
+    st.markdown("<div style='padding: 0 12px;margin-bottom:8px;margin-top:20px;font-size:11px;font-weight:600;color:#9CA3AF;letter-spacing:0.08em;text-transform:uppercase;'>Navigation</div>", unsafe_allow_html=True)
 
-    menu = st.radio(
-        "Navigation",
-        ["◈  Overview", "📋  Data Table", "📊  Visualize", "🤖  ML Model"],
-        label_visibility="collapsed",
-    )
+    menu = st.radio("Navigation", ["◈  Overview", "📋  Data Table", "📊  Visualize", "🤖  ML Model"], label_visibility="collapsed")
     page = menu.split("  ")[1]
-
     st.divider()
 
-    # Dataset status
     if st.session_state.data is not None:
         df = st.session_state.data
-        st.markdown(
-            f'<div class="status-card">'
-            f'<div class="status-label">Active Dataset</div>'
-            f'<div class="status-name">{st.session_state.filename}</div>'
-            f'<span class="stat-badge">{df.shape[0]:,} × {df.shape[1]}</span>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="status-card"><div class="status-label">Active Dataset</div><div class="status-name">{st.session_state.filename}</div><span class="stat-badge">{df.shape[0]:,} × {df.shape[1]}</span></div>', unsafe_allow_html=True)
         if st.button("⟳  Clear dataset", use_container_width=True):
             st.session_state.data = None
             st.session_state.filename = None
             st.rerun()
-    else:
-        st.markdown(
-            '<p style="font-size:12px;color:#2d3748;line-height:1.7;">'
-            'No dataset loaded.<br>Go to <b style="color:#4a5568;">Overview</b> to upload.</p>',
-            unsafe_allow_html=True,
-        )
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown(
-        '<p style="font-size:10px;color:#1e2533;font-family:\'JetBrains Mono\',monospace;'
-        'letter-spacing:0.06em;">DATALENS v2.0 · STREAMLIT</p>',
-        unsafe_allow_html=True,
-    )
-
-
-# ─────────────────────────────────────────
-#  Helpers
-# ─────────────────────────────────────────
-def no_data_warning():
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.info("📂  No dataset loaded yet. Head to **Overview** to upload a CSV.")
-
-
-def section_header(label: str):
-    st.markdown(
-        f'<div class="section-pill"><span class="dot"></span>{label}</div>',
-        unsafe_allow_html=True,
-    )
-
-
-# ─────────────────────────────────────────
-#  PAGE: Overview
-# ─────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: Overview
+# ─────────────────────────────────────────────────────────────────────────────
 if page == "Overview":
-    st.markdown('<div class="page-title">Overview</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="page-sub">Upload a CSV and inspect your dataset at a glance.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown("""
+    <div class="page-header">
+        <div class="page-title">Overview</div>
+        <div class="page-subtitle">Upload your dataset and explore key statistics at a glance.</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     col_upload, col_info = st.columns([1.2, 1], gap="large")
 
     with col_upload:
-        section_header("Upload")
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        section_header("Upload Dataset")
         file = st.file_uploader("Drop a CSV file here", type=["csv"], label_visibility="collapsed")
-
         if file:
             df, err = load_csv(file)
             if df is not None:
                 st.session_state.data = df
                 st.session_state.filename = file.name
-                st.success(f"✓  Loaded **{file.name}** — {df.shape[0]:,} rows, {df.shape[1]} columns")
+                st.success(f"✓  Loaded **{file.name}**")
             else:
-                st.error(f"Failed to load file: {err}")
+                st.error(err)
 
-    with col_info:
-        section_header("Quick tips")
-        st.markdown("""
-<ul class="tip-list">
-  <li>CSV files up to 200 MB are supported</li>
-  <li>Mixed numeric &amp; categorical columns work fine</li>
-  <li>Missing values are handled automatically in ML</li>
-  <li>Use the sidebar to navigate between views</li>
-</ul>""", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top:16px; margin-bottom:8px; font-size:13px; color:#9CA3AF; text-align:center;'>— or —</div>", unsafe_allow_html=True)
+        if st.button("Load Sample Dataset (Titanic)", use_container_width=True):
+            df, err = load_sample_dataset()
+            if df is not None:
+                st.session_state.data = df
+                st.session_state.filename = "titanic.csv"
+                st.success("✓  Sample dataset loaded!")
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.data is not None:
-        st.markdown("<br>", unsafe_allow_html=True)
         df = st.session_state.data
+
+        # Metrics Row
+        st.markdown("<div style='margin: 28px 0 16px 0;'>", unsafe_allow_html=True)
+        section_header("Dataset Summary")
         summary = get_summary(df)
-
-        # ── Metric row ──
-        section_header("Dataset stats")
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Rows", f"{summary['shape'][0]:,}")
+        m1.metric("Total Rows", f"{summary['shape'][0]:,}")
         m2.metric("Columns", str(summary['shape'][1]))
-        m3.metric("Missing values", str(int(summary['missing'].sum())))
-        m4.metric("Numeric cols", str(len(df.select_dtypes(include='number').columns)))
+        m3.metric("Missing Values", str(int(summary['missing'].sum())))
+        m4.metric("Numeric Columns", str(len(df.select_dtypes(include='number').columns)))
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Insights
+        st.markdown("<div style='margin-top: 28px;'>", unsafe_allow_html=True)
+        section_header("Auto Insights")
+        insights = generate_insights(df)
+        if insights:
+            for insight in insights:
+                st.info(insight)
+        else:
+            st.success("✓  Data looks clean — no major missing values or high skewness detected.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        col_a, col_b = st.columns(2, gap="large")
+    else:
+        with col_info:
+            st.markdown("""
+            <div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;padding:28px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                <div style="font-size:13px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:16px;">How it works</div>
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                        <div style="background:#EFF6FF;color:#2563EB;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
+                        <div><div style="font-size:14px;font-weight:600;color:#111827;">Upload a CSV</div><div style="font-size:13px;color:#6B7280;margin-top:2px;">Drag & drop your dataset or use the sample.</div></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                        <div style="background:#EFF6FF;color:#2563EB;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
+                        <div><div style="font-size:14px;font-weight:600;color:#111827;">Explore & Clean</div><div style="font-size:13px;color:#6B7280;margin-top:2px;">View, filter, and clean data in the Data Table tab.</div></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                        <div style="background:#EFF6FF;color:#2563EB;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">3</div>
+                        <div><div style="font-size:14px;font-weight:600;color:#111827;">Visualize</div><div style="font-size:13px;color:#6B7280;margin-top:2px;">Generate 9 chart types from your data instantly.</div></div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                        <div style="background:#EFF6FF;color:#2563EB;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">4</div>
+                        <div><div style="font-size:14px;font-weight:600;color:#111827;">Run ML Models</div><div style="font-size:13px;color:#6B7280;margin-top:2px;">Auto-train and compare multiple models in one click.</div></div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        with col_a:
-            section_header("Column types")
-            type_df = pd.DataFrame({
-                "Column": summary["dtypes"].index,
-                "Type": summary["dtypes"].values.astype(str),
-            })
-            st.dataframe(type_df, use_container_width=True, hide_index=True, height=250)
-
-        with col_b:
-            section_header("Missing values")
-            miss = summary["missing"]
-            miss_df = pd.DataFrame({
-                "Column": miss.index,
-                "Missing": miss.values,
-                "% Missing": (miss.values / df.shape[0] * 100).round(1),
-            })
-            miss_df = miss_df.sort_values("Missing", ascending=False)
-            st.dataframe(miss_df, use_container_width=True, hide_index=True, height=250)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        section_header("Descriptive statistics")
-        desc = df.describe(include='all').T.round(3)
-        st.dataframe(desc, use_container_width=True, height=300)
-
-
-# ─────────────────────────────────────────
-#  PAGE: Data Table
-# ─────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: Data Table
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "Data Table":
-    st.markdown('<div class="page-title">Data Table</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="page-sub">Browse, filter, and search your raw data.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown("""
+    <div class="page-header">
+        <div class="page-title">Data Table</div>
+        <div class="page-subtitle">Inspect, clean, and manage your dataset.</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.session_state.data is None:
         no_data_warning()
     else:
         df = st.session_state.data
 
-        section_header("Filters")
-        fcol1, fcol2, fcol3 = st.columns([1.5, 1.5, 1])
+        # Cleaning tools in a card
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        section_header("Data Cleaning Tools")
+        c1, c2, c3 = st.columns([1, 1, 2])
+        with c1:
+            if st.button("Drop Duplicates", use_container_width=True):
+                st.session_state.data = df.drop_duplicates()
+                st.success("✓  Duplicates removed!")
+                st.rerun()
+        with c2:
+            if st.button("Fill Missing (Mean/Mode)", use_container_width=True):
+                for col in df.columns:
+                    if pd.api.types.is_numeric_dtype(df[col]):
+                        df[col] = df[col].fillna(df[col].mean())
+                    else:
+                        df[col] = df[col].fillna(df[col].mode()[0])
+                st.session_state.data = df
+                st.success("✓  Missing values filled!")
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        with fcol1:
-            search_col = st.selectbox("Filter by column", ["— none —"] + list(df.columns))
-        with fcol2:
-            search_val = st.text_input("Contains value", placeholder="e.g. male, 30, true …")
-        with fcol3:
-            n_rows = st.selectbox("Rows to show", [50, 100, 500, "All"], index=0)
+        # Table
+        st.markdown("<div style='margin-top: 8px;'>", unsafe_allow_html=True)
+        section_header(f"Dataset — {df.shape[0]:,} rows × {df.shape[1]} columns")
+        st.markdown('<div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
+        st.dataframe(df, use_container_width=True, height=480)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        filtered = df.copy()
-        if search_col != "— none —" and search_val:
-            mask = filtered[search_col].astype(str).str.contains(search_val, case=False, na=False)
-            filtered = filtered[mask]
-
-        display_df = filtered if n_rows == "All" else filtered.head(int(n_rows))
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        section_header(f"{len(filtered):,} rows matched")
-        st.dataframe(display_df, use_container_width=True, height=480, hide_index=False)
-
-        csv_bytes = filtered.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            label="⬇  Download filtered CSV",
-            data=csv_bytes,
-            file_name="filtered_data.csv",
-            mime="text/csv",
-        )
-
-
-# ─────────────────────────────────────────
-#  PAGE: Visualize
-# ─────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: Visualize
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "Visualize":
-    st.markdown('<div class="page-title">Visualize</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="page-sub">Explore distributions, correlations, and relationships.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown("""
+    <div class="page-header">
+        <div class="page-title">Visualize</div>
+        <div class="page-subtitle">Generate charts and uncover patterns in your data.</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.session_state.data is None:
         no_data_warning()
@@ -838,154 +678,160 @@ elif page == "Visualize":
         cat_cols = list(df.select_dtypes(include='object').columns)
         all_cols = list(df.columns)
 
-        tab1, tab2, tab3, tab4 = st.tabs(["Distribution", "Correlation", "Scatter", "Box / Violin"])
+        # Controls card
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        section_header("Chart Configuration")
 
-        with tab1:
-            st.markdown("<br>", unsafe_allow_html=True)
-            d_col1, d_col2 = st.columns([1, 3])
-            with d_col1:
-                dist_col = st.selectbox("Column", all_cols, key="dist_col")
-                if dist_col in num_cols:
-                    bins = st.slider("Bins", 5, 100, 30)
-                    show_kde = st.checkbox("Overlay KDE", value=True)
-                else:
-                    bins, show_kde = 30, False
-                    st.info("Categorical column — showing value counts")
-            with d_col2:
-                fig = plot_distribution(df, dist_col, bins=bins, show_kde=show_kde)
-                st.pyplot(fig)
+        plot_type = st.selectbox("Select Plot Type", [
+            "Distribution", "Correlation", "Scatter", "Box / Violin", "Bar", "Line", "Pie", "Histogram", "Pairplot"
+        ])
 
-        with tab2:
-            st.markdown("<br>", unsafe_allow_html=True)
+        fig = None
+
+        if plot_type == "Distribution":
+            col = st.selectbox("Column", all_cols)
+            if st.button("Generate Chart", use_container_width=False):
+                fig = plot_distribution(df, col)
+
+        elif plot_type == "Correlation":
             if len(num_cols) < 2:
-                st.warning("Need at least 2 numeric columns for a correlation heatmap.")
-            else:
-                h_col1, h_col2 = st.columns([1, 3])
-                with h_col1:
-                    selected_cols = st.multiselect("Columns", num_cols, default=num_cols[:min(8, len(num_cols))])
-                    method = st.selectbox("Method", ["pearson", "spearman", "kendall"])
-                with h_col2:
-                    if len(selected_cols) >= 2:
-                        fig = plot_correlation(df, selected_cols, method=method)
-                        st.pyplot(fig)
-                    else:
-                        st.info("Select at least 2 columns.")
+                st.warning("⚠️  Need 2 or more numeric columns to generate a correlation matrix.")
+            elif st.button("Generate Chart"):
+                fig = plot_correlation(df, num_cols)
 
-        with tab3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if len(num_cols) < 2:
-                st.warning("Need at least 2 numeric columns for a scatter plot.")
-            else:
-                s1, s2, s3 = st.columns(3)
-                with s1:
-                    x_col = st.selectbox("X axis", num_cols, index=0, key="sx")
-                with s2:
-                    y_col = st.selectbox("Y axis", num_cols, index=min(1, len(num_cols)-1), key="sy")
-                with s3:
-                    hue_col = st.selectbox("Color by", ["— none —"] + cat_cols, key="shue")
-                hue = None if hue_col == "— none —" else hue_col
-                fig = plot_scatter(df, x_col, y_col, hue=hue)
-                st.pyplot(fig)
+        elif plot_type == "Scatter":
+            sc1, sc2, sc3 = st.columns(3)
+            with sc1: x = st.selectbox("X-Axis", num_cols, index=0)
+            with sc2: y = st.selectbox("Y-Axis", num_cols, index=min(1, len(num_cols)-1))
+            with sc3: hue = st.selectbox("Color By", ["— none —"] + cat_cols)
+            if st.button("Generate Chart"):
+                fig = plot_scatter(df, x, y, hue)
 
-        with tab4:
-            st.markdown("<br>", unsafe_allow_html=True)
-            b1, b2, b3 = st.columns(3)
-            with b1:
-                bv_col = st.selectbox("Numeric column", num_cols, key="bvc")
-            with b2:
-                grp_col = st.selectbox("Group by", ["— none —"] + cat_cols, key="bgc")
-            with b3:
-                bv_type = st.selectbox("Chart type", ["Box", "Violin"])
-            grp = None if grp_col == "— none —" else grp_col
-            fig = plot_boxplot(df, bv_col, group=grp, kind=bv_type.lower())
+        elif plot_type == "Box / Violin":
+            bv1, bv2, bv3 = st.columns(3)
+            with bv1: col = st.selectbox("Numeric Column", num_cols)
+            with bv2: grp = st.selectbox("Group By (Optional)", ["None"] + cat_cols)
+            with bv3: kind = st.selectbox("Type", ["Box", "Violin"]).lower()
+            if st.button("Generate Chart"):
+                fig = plot_boxplot(df, col, grp if grp != "None" else None, kind)
+
+        elif plot_type == "Bar":
+            ba1, ba2 = st.columns(2)
+            with ba1: cat = st.selectbox("Category Column", cat_cols if cat_cols else all_cols)
+            with ba2: num = st.selectbox("Numeric Column (Optional)", ["None"] + num_cols)
+            if st.button("Generate Chart"):
+                fig = plot_bar(df, cat, num if num != "None" else None)
+
+        elif plot_type == "Line":
+            li1, li2 = st.columns(2)
+            with li1: x = st.selectbox("X-Axis", all_cols)
+            with li2: y = st.selectbox("Y-Axis", num_cols)
+            if st.button("Generate Chart"):
+                fig = plot_line(df, x, y)
+
+        elif plot_type == "Pie":
+            cat = st.selectbox("Categorical Column", cat_cols if cat_cols else all_cols)
+            if st.button("Generate Chart"):
+                fig = plot_pie(df, cat)
+
+        elif plot_type == "Histogram":
+            col = st.selectbox("Numeric Column", num_cols)
+            if st.button("Generate Chart"):
+                fig = plot_histogram(df, col)
+
+        elif plot_type == "Pairplot":
+            st.markdown("<div style='font-size:13px;color:#6B7280;margin-bottom:12px;'>Generates a pairplot for all numeric columns. May take a few seconds.</div>", unsafe_allow_html=True)
+            if st.button("Generate Chart"):
+                fig = plot_pairplot(df)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Chart output card
+        if fig:
+            st.markdown(f"""
+            <div class="chart-card">
+                <div class="chart-title">📊 {plot_type} Chart</div>
+            """, unsafe_allow_html=True)
             st.pyplot(fig)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-
-# ─────────────────────────────────────────
-#  PAGE: ML Model
-# ─────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: ML Model
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "ML Model":
-    st.markdown('<div class="page-title">ML Model</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="page-sub">Train a baseline model, inspect metrics and feature importance.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown("""
+    <div class="page-header">
+        <div class="page-title">ML Model</div>
+        <div class="page-subtitle">Auto-train and compare multiple machine learning models on your dataset.</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.session_state.data is None:
         no_data_warning()
     else:
         df = st.session_state.data
 
-        section_header("Configuration")
-        ml1, ml2, ml3 = st.columns(3)
-
-        with ml1:
-            target = st.selectbox("Target column", df.columns)
-        with ml2:
-            test_size = st.slider("Test split %", 10, 40, 20)
-        with ml3:
-            scale = st.checkbox("Scale features", value=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        run = st.button("▶  Train model", use_container_width=False)
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        section_header("Model Configuration")
+        target = st.selectbox("Target Column", df.columns)
+        st.markdown("<div style='margin-top:4px;font-size:12px;color:#9CA3AF;'>Select the column you want to predict. The model type (classification or regression) is determined automatically.</div>", unsafe_allow_html=True)
+        run = st.button("▶  Train & Compare Models", use_container_width=False)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         if run:
-            with st.spinner("Training…"):
-                results = run_ml_model(df, target, test_size=test_size / 100, scale_features=scale)
+            with st.spinner("Training models — this may take a moment..."):
+                results = run_ml_model(df, target)
 
             if results.get("error"):
                 st.error(f"Training failed: {results['error']}")
             else:
-                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
                 section_header("Results")
-
-                r1, r2, r3 = st.columns([1, 1, 2])
                 metric_name = "Accuracy" if results["problem"] == "Classification" else "R² Score"
-                score_val = results["score"]
+
+                r1, r2 = st.columns([1, 2], gap="large")
 
                 with r1:
                     st.markdown(f"""
-<div class="score-card">
-  <div class="score-label">{metric_name}</div>
-  <div class="score-value">{score_val:.2%}</div>
-  <div class="score-type">{results['problem']}</div>
-</div>""", unsafe_allow_html=True)
+                    <div class="score-card">
+                        <div class="score-label">Best Model · {results['model_name']}</div>
+                        <div class="score-value">{results['score']:.2%}</div>
+                        <div class="score-type">{results['problem']} · {metric_name}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
                 with r2:
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    st.metric("Model", results["model_name"])
-                    st.metric("Train rows", f"{results['train_rows']:,}")
-                    st.metric("Test rows", f"{results['test_rows']:,}")
+                    st.markdown("""
+                    <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px;">Model Comparison Scoreboard</div>
+                    """, unsafe_allow_html=True)
+                    scores_df = pd.DataFrame(list(results["all_model_scores"].items()), columns=["Model", metric_name])
+                    st.markdown('<div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;">', unsafe_allow_html=True)
+                    st.dataframe(
+                        scores_df.style.highlight_max(subset=[metric_name], color='#DCFCE7'),
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-                with r3:
-                    if results.get("extra_metrics"):
-                        section_header("Extra metrics")
-                        em_df = pd.DataFrame(
-                            list(results["extra_metrics"].items()),
-                            columns=["Metric", "Value"],
+                st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+                c1, c2 = st.columns(2, gap="large")
+
+                with c1:
+                    if results.get("confusion_matrix"):
+                        st.markdown('<div class="chart-card"><div class="chart-title">Confusion Matrix</div>', unsafe_allow_html=True)
+                        st.pyplot(results["confusion_matrix"])
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    elif results.get("residual_plot"):
+                        st.markdown('<div class="chart-card"><div class="chart-title">Residual Plot</div>', unsafe_allow_html=True)
+                        st.pyplot(results["residual_plot"])
+                        st.markdown('</div>', unsafe_allow_html=True)
+
+                with c2:
+                    if results.get("feature_importance") is not None:
+                        st.markdown('<div class="chart-card"><div class="chart-title">Feature Importance (Top 10)</div>', unsafe_allow_html=True)
+                        st.dataframe(
+                            results["feature_importance"].head(10),
+                            use_container_width=True,
+                            hide_index=True
                         )
-                        st.dataframe(em_df, use_container_width=True, hide_index=True)
-
-                if results.get("feature_importance") is not None:
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    section_header("Feature importance")
-                    fi = results["feature_importance"]
-                    max_fi = fi["Importance"].max() or 1
-                    for _, row in fi.head(15).iterrows():
-                        pct = row["Importance"] / max_fi * 100
-                        st.markdown(f"""
-<div class="fi-row">
-  <div class="fi-name">{row['Feature']}</div>
-  <div class="fi-bar-bg"><div class="fi-bar" style="width:{pct:.1f}%"></div></div>
-  <div class="fi-val">{row['Importance']:.3f}</div>
-</div>""", unsafe_allow_html=True)
-
-                if results.get("confusion_matrix") is not None:
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    section_header("Confusion matrix")
-                    st.pyplot(results["confusion_matrix"])
-
-                if results.get("residual_plot") is not None:
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    section_header("Residuals vs predicted")
-                    st.pyplot(results["residual_plot"])
+                        st.markdown('</div>', unsafe_allow_html=True)
